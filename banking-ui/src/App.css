@@ -1,0 +1,109 @@
+/* 1. Import a Professional Font (Inter - standard for modern apps) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* 2. Global Styles */
+body {
+  font-family: 'Inter', sans-serif; /* Apply the new font */
+  background-color: #f3f4f6; /* Matches Tailwind's bg-gray-100 */
+  -webkit-font-smoothing: antialiased; /* Makes text look sharper */
+  color: #1f2937; /* Dark gray text for better readability */
+}
+
+/* 3. Custom Scrollbar (Makes tables look cleaner) */
+/* Works on Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Soft gray handle */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Darker gray on hover */
+}
+
+/* 4. Page Fade-In Animation */
+/* This makes every page slide up gently when you click a link */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply animation to your main container automatically */
+.container {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* 5. Table Row Hover Effect */
+/* Adds a smooth transition when you mouse over customer lists */
+tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* 6. Button Hover Scale */
+/* Gives a subtle "press" feel to buttons */
+button, a {
+  transition: transform 0.1s ease, background-color 0.2s;
+}
+
+button:active, a:active {
+  transform: scale(0.98);
+}
+
+
+
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+} */
