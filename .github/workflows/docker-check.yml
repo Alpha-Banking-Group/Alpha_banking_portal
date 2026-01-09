@@ -1,27 +1,35 @@
 name: Docker Build Check
 
-# This tells GitHub to run the script on every Pull Request to 'main'
 on:
-  pull_request:
+  push:
     branches: [ "main" ]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Download the code from the PR branch
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up Docker Buildx (makes builds faster/better)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin' # This was missing and caused the error
+
+      - name: Build JAR
+        run: mvn -B -DskipTests package
+        working-directory: ./banking-app # Tells Maven where your pom.xml is
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 3. Try to build the image (but don't save/push it yet)
       - name: Build Banking App
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: false  # Only testing if it builds, not publishing it
+          context: ./banking-app # Fixed: must point to your app folder
+          file: ./banking-app/Dockerfile
+          push: false
           tags: banking-app:test

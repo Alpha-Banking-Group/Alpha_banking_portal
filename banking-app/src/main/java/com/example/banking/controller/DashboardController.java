@@ -30,10 +30,6 @@ public class DashboardController {
     {
         return "git testing";
     }
-    @GetMapping(value="/update")
-    public String update(){
-        return "Update the Controller cLass"; 
-    }
     @GetMapping("/stats")
     public DashboardStats getStats() {
         // 1. Counts
