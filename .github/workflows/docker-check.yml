@@ -2,7 +2,7 @@ name: Docker Build Check
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
 
 jobs:
@@ -17,17 +17,19 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
+          distribution: 'temurin' # This was missing and caused the error
 
       - name: Build JAR
         run: mvn -B -DskipTests package
+        working-directory: ./banking-app # Tells Maven where your pom.xml is
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Banking App
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./banking-app # Fixed: must point to your app folder
           file: ./banking-app/Dockerfile
           push: false
           tags: banking-app:test
