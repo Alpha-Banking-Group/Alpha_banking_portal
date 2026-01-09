@@ -28,6 +28,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile   # or ./dockerfile if you keep the lowercase filename
+          file: ./banking-app/Dockerfile
           push: false
           tags: banking-app:test
