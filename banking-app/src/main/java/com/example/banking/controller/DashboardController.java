@@ -30,6 +30,11 @@ public class DashboardController {
     {
         return "git testing";
     }
+    public String prasahnth()
+    {
+        return "welocome to git hub"
+    }
+    
     @GetMapping("/stats")
     public DashboardStats getStats() {
         // 1. Counts
