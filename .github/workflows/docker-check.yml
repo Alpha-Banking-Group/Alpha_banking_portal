@@ -1,27 +1,7 @@
-name: Docker Build Check
-
-# This tells GitHub to run the script on every Pull Request to 'main'
-on:
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. Download the code from the PR branch
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Set up Docker Buildx (makes builds faster/better)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 3. Try to build the image (but don't save/push it yet)
-      - name: Build Banking App
+- name: Build Banking App
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: false  # Only testing if it builds, not publishing it
+          context: ./banking-app  # Change this from '.' to './banking-app'
+          file: ./banking-app/Dockerfile
+          push: false
           tags: banking-app:test
