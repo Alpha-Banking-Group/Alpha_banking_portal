@@ -1,9 +1,27 @@
-- name: Build Banking App
+name: Docker Build Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Banking App
         uses: docker/build-push-action@v5
         with:
           # This tells Docker that everything it needs is inside the banking-app folder
-          context: ./banking-app 
+          context: ./banking-app
           # This tells Docker exactly where the Dockerfile is located
-          file: ./banking-app/Dockerfile 
+          file: ./banking-app/Dockerfile
           push: false
           tags: banking-app:test
