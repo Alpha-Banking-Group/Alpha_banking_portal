@@ -28,7 +28,12 @@ public class DashboardController {
 @GetMapping(value="/git")
     public String test()
     {
-        return "git testing";
+        return "git testing ";
+    }
+    @GetMapping(value="/gits")
+     public String tests()
+    {
+        return "git testing by me ";
     }
     @GetMapping("/stats")
     public DashboardStats getStats() {
