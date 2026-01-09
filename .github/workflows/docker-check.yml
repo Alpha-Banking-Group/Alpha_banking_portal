@@ -1,7 +1,9 @@
 - name: Build Banking App
         uses: docker/build-push-action@v5
         with:
-          context: ./banking-app  # Change this from '.' to './banking-app'
-          file: ./banking-app/Dockerfile
+          # This tells Docker that everything it needs is inside the banking-app folder
+          context: ./banking-app 
+          # This tells Docker exactly where the Dockerfile is located
+          file: ./banking-app/Dockerfile 
           push: false
           tags: banking-app:test
