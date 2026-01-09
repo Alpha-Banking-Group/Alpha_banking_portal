@@ -25,7 +25,11 @@ public class DashboardController {
 
     @Autowired
     private TransactionRepository transactionRepository;
-
+@GetMapping(value="/git")
+    public String test()
+    {
+        return "git testing";
+    }
     @GetMapping("/stats")
     public DashboardStats getStats() {
         // 1. Counts
