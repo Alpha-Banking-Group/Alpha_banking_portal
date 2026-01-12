@@ -23,3 +23,6 @@ A comprehensive banking system built with a Spring Boot backend and React (Vite)
 1. Navigate to `banking-ui`.
 2. Install dependencies: `npm install`
 3. Run the development server: `npm run dev`
+
+
+[![Docker Build Check](https://github.com/Alpha-Banking-Group/Alpha_banking_portal/actions/workflows/docker-check.yml/badge.svg?branch=main)](https://github.com/Alpha-Banking-Group/Alpha_banking_portal/actions/workflows/docker-check.yml)

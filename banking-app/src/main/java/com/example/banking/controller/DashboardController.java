@@ -21,6 +21,7 @@ public class DashboardController {
     @Autowired private AccountRepository accountRepository;
     @Autowired private TransactionRepository transactionRepository;
 
+
     @GetMapping("/stats")
     public DashboardStats getStats() {
         long totalCustomers = customerRepository.count();
