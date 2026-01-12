@@ -4,12 +4,11 @@ import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "users") // "user" is a reserved keyword in Postgres/SQL, so we use "users"
+@Table(name = "users") // 
 public class User implements UserDetails {
 
     @Id
@@ -35,9 +34,12 @@ public class User implements UserDetails {
 
     // --- UserDetails Methods (Required by Spring Security) ---
 
+ // User.java
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        // Force the ROLE_ prefix to ensure compatibility with hasRole()
+        String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return List.of(new SimpleGrantedAuthority(roleWithPrefix));
     }
 
     @Override

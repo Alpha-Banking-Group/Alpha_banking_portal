@@ -1,64 +1,72 @@
 package com.example.banking.controller;
 
-import com.example.banking.entity.Account;
-import com.example.banking.service.AccountService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import com.example.banking.entity.Transaction;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.banking.entity.Account;
+import com.example.banking.entity.Transaction;
+import com.example.banking.service.AccountService;
 
 @RestController
-@CrossOrigin(origins="http://localhost:5173")
 @RequestMapping("/api/accounts")
 public class AccountController {
 
     @Autowired
-    private AccountService service;
+    private AccountService accountService;
 
+    // Create Account: Customer ID is still Long, that's fine
     @PostMapping("/{customerId}")
     public Account createAccount(@PathVariable Long customerId, @RequestBody Account account) {
-        return service.createAccount(customerId, account);
-    }
-    
-    @GetMapping("/{id}/transactions")
-    public List<Transaction> getTransactions(@PathVariable Long id) {
-        return service.getTransactionHistory(id);
+        return accountService.createAccount(customerId, account);
     }
 
-    @GetMapping("/{id}")
-    public Account getAccount(@PathVariable Long id) {
-        return service.getAccount(id);
+    // FIX: Changed Long -> String
+    @GetMapping("/{accountNumber}")
+    public Account getAccount(@PathVariable String accountNumber) {
+        return accountService.getAccount(accountNumber);
     }
 
-    @PutMapping("/{id}/deposit")
-    public Account deposit(@PathVariable Long id, @RequestBody Map<String, Double> request) {
-        Double amount = request.get("amount");
-        return service.deposit(id, amount);
+    // FIX: Changed Long -> String
+    @PostMapping("/{accountNumber}/deposit")
+    public Account deposit(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
+        return accountService.deposit(accountNumber, request.get("amount"));
     }
 
-    @PutMapping("/{id}/withdraw")
-    public Account withdraw(@PathVariable Long id, @RequestBody Map<String, Double> request) {
-        Double amount = request.get("amount");
-        return service.withdraw(id, amount);
+    // FIX: Changed Long -> String
+    @PostMapping("/{accountNumber}/withdraw")
+    public Account withdraw(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
+        return accountService.withdraw(accountNumber, request.get("amount"));
     }
 
-    @PutMapping("/{id}/transfer")
-    public String transfer(@PathVariable Long id, @RequestBody Map<String, Object> request) {
-        Long toAccountId = Long.valueOf(request.get("toAccountId").toString());
+    @PostMapping("/transfer")
+    public String transfer(@RequestBody Map<String, Object> request) {
+        // FIX: Casting to String instead of Long
+        String fromAccount = request.get("fromAccount").toString();
+        String toAccount = request.get("toAccount").toString();
         Double amount = Double.valueOf(request.get("amount").toString());
-        
-        service.transfer(id, toAccountId, amount);
+
+        accountService.transfer(fromAccount, toAccount, amount);
         return "Transfer Successful";
     }
-    
-    //Toggle Status (Freeze/Unfreeze)
-    @PutMapping("/{id}/status")
-    public Account toggleStatus(@PathVariable Long id) {
-        return service.updateAccountStatus(id);
-    }
 
-   
+    // FIX: Changed Long -> String
+    @GetMapping("/{accountNumber}/transactions")
+    public List<Transaction> getTransactionHistory(@PathVariable String accountNumber) {
+        return accountService.getTransactionHistory(accountNumber);
+    }
+    
+    // FIX: Changed Long -> String
+    @PutMapping("/{accountNumber}/status")
+    public Account updateAccountStatus(@PathVariable String accountNumber) {
+        return accountService.updateAccountStatus(accountNumber);
+    }
 }

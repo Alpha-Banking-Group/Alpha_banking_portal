@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 1. Create the Axios Instance
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api', // Your Spring Boot URL
+    baseURL: 'https://7q2kbnkjri.ap-south-1.awsapprunner.com/api', // Your Spring Boot URL
 });
 
 // Before sending ANY request, check if we have a token.
