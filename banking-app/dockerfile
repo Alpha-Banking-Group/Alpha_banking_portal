@@ -1,22 +1,16 @@
-# ---------- builder stage ----------
-# Changed from maven:3.9.2-eclipse-temurin-17 to maven:3.9.6-eclipse-temurin-21
+# STEP 1: Name this stage "build"
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /workspace
-
-# copy only the files necessary for dependency download to leverage layer cache
 COPY pom.xml ./
 COPY src ./src
-
-# Build the JAR (skip tests to speed CI)
 RUN mvn -B -DskipTests package
 
-# ---------- runtime stage ----------
-# Changed from eclipse-temurin:17-jre to eclipse-temurin:21-jre
+# STEP 2: Use the runtime stage
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# copy the jar built in the builder stage
-COPY --from=build /workspace/target/*.jar ./app.jar
+# This now works because "build" is defined in Step 1
+COPY --from=build /workspace/target/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

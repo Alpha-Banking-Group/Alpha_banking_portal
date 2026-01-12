@@ -18,11 +18,11 @@ public class DataSeeder {
         return args -> {
             // Check if admin exists, if not, create one
             if (userRepository.findByUsername("admin").isEmpty()) {
-                User admin = new User();
-                admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin123")); 
-                admin.setRole("ADMIN");
-                userRepository.save(admin);
+            	User admin = new User();
+            	admin.setUsername("admin");
+            	admin.setPassword(passwordEncoder.encode("admin123"));
+            	admin.setRole("ROLE_ADMIN"); // Use the full Spring-compliant name
+            	userRepository.save(admin);
                 
                 System.out.println("---------------------------------");
                 System.out.println("DEFAULT ADMIN USER CREATED");

@@ -1,64 +1,49 @@
 package com.example.banking.entity;
 
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import jakarta.persistence.*;
-
 @Entity
+@Table(name = "account")
 public class Account {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long accountNumber;
+    @Column(name = "acnumber")
+    private String accountNumber;
 
+    @Column(name = "atype")
     private String accountType;
+
     private Double balance;
+
+    @Column(name = "astatus")
     private String status;
 
-    @ManyToOne
-    @JsonBackReference //  It tells Java I am the child, don't print the parent again
-    @JoinColumn(name = "customer_id")
+    @Column(name = "opening_date")
+    private String openingDate;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "custid")
+    @JsonBackReference
     private Customer customer;
 
-    // --- GETTERS AND SETTERS ---
+    // --- MANUAL GETTERS AND SETTERS (Fixes Red Lines) ---
 
-    public Long getAccountNumber() {
-        return accountNumber;
-    }
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
 
-    public void setAccountNumber(Long accountNumber) {
-        this.accountNumber = accountNumber;
-    }
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
 
-    public String getAccountType() {
-        return accountType;
-    }
+    public Double getBalance() { return balance; }
+    public void setBalance(Double balance) { this.balance = balance; }
 
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public Double getBalance() {
-        return balance;
-    }
+    public String getOpeningDate() { return openingDate; }
+    public void setOpeningDate(String openingDate) { this.openingDate = openingDate; }
 
-    public void setBalance(Double balance) {
-        this.balance = balance;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
 }

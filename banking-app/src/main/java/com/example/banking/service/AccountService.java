@@ -9,7 +9,6 @@ import com.example.banking.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -24,131 +23,90 @@ public class AccountService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    @Autowired
-    private EmailService emailService; // <--- INJECT EMAIL SERVICE
-
-    // --- HELPER 1: Check KYC ---
+    // --- Helper Methods ---
     private void checkKyc(Account account) {
-        String kycStatus = account.getCustomer().getKycStatus();
-        if (!"VERIFIED".equalsIgnoreCase(kycStatus)) {
-            throw new RuntimeException("Transaction Failed: Customer KYC is " + kycStatus);
+        if (account.getCustomer() != null && !"VERIFIED".equalsIgnoreCase(account.getCustomer().getKycStatus())) {
+            throw new RuntimeException("Transaction Failed: KYC not verified");
         }
     }
 
-    // --- HELPER 2: Check Account Status (Freeze Logic) ---
     private void checkAccountStatus(Account account) {
         if ("FROZEN".equalsIgnoreCase(account.getStatus()) || "INACTIVE".equalsIgnoreCase(account.getStatus())) {
-            throw new RuntimeException("Transaction Failed: Account is FROZEN/INACTIVE. Please contact the bank.");
+            throw new RuntimeException("Transaction Failed: Account is FROZEN/INACTIVE");
         }
     }
 
-    // Create Account (With "One Account Per Customer" Rule)
+    // --- Core Features ---
+
     public Account createAccount(Long customerId, Account account) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-
-        if (!customer.getAccounts().isEmpty()) {
-            throw new RuntimeException("Customer already has an account. Cannot create another.");
+        
+        if(account.getAccountNumber() == null || account.getAccountNumber().isEmpty()){
+             throw new RuntimeException("Account Number is required");
         }
 
         account.setCustomer(customer);
-        if (account.getStatus() == null) {
-            account.setStatus("ACTIVE");
-        }
+        if (account.getStatus() == null) account.setStatus("ACTIVE");
         
         return accountRepository.save(account);
     }
 
-    // Get Account
-    public Account getAccount(Long id) {
-        return accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
+    // FIX: Changed Long id -> String accountNumber
+    public Account getAccount(String accountNumber) {
+        return accountRepository.findById(accountNumber)
+            .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
     }
 
-    // --- UPDATED: Deposit (Checks Status + Saves History + Sends Email) ---
-    public Account deposit(Long id, Double amount) {
-        Account account = getAccount(id);
-        
-        // 1. Validations
+    public Account deposit(String accountNumber, Double amount) {
+        Account account = getAccount(accountNumber);
         checkAccountStatus(account);
         checkKyc(account);
         
-        // 2. Process Deposit
         account.setBalance(account.getBalance() + amount);
         Account savedAccount = accountRepository.save(account);
 
-        // 3. Save Transaction
         Transaction transaction = new Transaction(amount, "DEPOSIT", savedAccount);
         transactionRepository.save(transaction);
 
-        // 4. Send Email Alert
-        emailService.sendTransactionAlert(
-            account.getCustomer().getEmail(),
-            account.getCustomer().getFullName(),
-            "DEPOSIT",
-            amount,
-            savedAccount.getBalance()
-        );
-
         return savedAccount;
     }
 
-    // --- UPDATED: Withdraw (Checks Status + Saves History + Sends Email) ---
-    public Account withdraw(Long id, Double amount) {
-        Account account = getAccount(id);
-        
-        // 1. Validations
+    public Account withdraw(String accountNumber, Double amount) {
+        Account account = getAccount(accountNumber);
         checkAccountStatus(account);
         checkKyc(account);
 
-        // 2. Check Balance
-        if (account.getBalance() < amount) {
-            throw new RuntimeException("Insufficient Balance");
-        }
+        if (account.getBalance() < amount) throw new RuntimeException("Insufficient Balance");
         
-        // 3. Process Withdraw
         account.setBalance(account.getBalance() - amount);
         Account savedAccount = accountRepository.save(account);
 
-        // 4. Save Transaction
-        Transaction transaction = new Transaction(amount, "WITHDRAW", savedAccount);
+        Transaction transaction = new Transaction(amount, "WITHDRAWAL", savedAccount);
         transactionRepository.save(transaction);
-
-        // 5. Send Email Alert
-        emailService.sendTransactionAlert(
-            account.getCustomer().getEmail(),
-            account.getCustomer().getFullName(),
-            "WITHDRAWAL",
-            amount,
-            savedAccount.getBalance()
-        );
 
         return savedAccount;
     }
 
-    // --- Transfer Money ---
     @Transactional 
-    public void transfer(Long fromId, Long toId, Double amount) {
-        // Calls deposit/withdraw so status checks, history & emails happen automatically!
-        withdraw(fromId, amount); 
-        deposit(toId, amount); 
+    public void transfer(String fromAccNum, String toAccNum, Double amount) {
+        withdraw(fromAccNum, amount); 
+        deposit(toAccNum, amount); 
     }
 
-    // --- Toggle Account Status (Freeze/Unfreeze) ---
-    public Account updateAccountStatus(Long id) {
-        Account account = getAccount(id);
-        
+    // --- MISSING METHODS ADDED HERE (Fixed for String ID) ---
+
+    public Account updateAccountStatus(String accountNumber) {
+        Account account = getAccount(accountNumber);
         if ("ACTIVE".equalsIgnoreCase(account.getStatus())) {
-            account.setStatus("FROZEN"); 
+            account.setStatus("FROZEN");
         } else {
-            account.setStatus("ACTIVE"); 
+            account.setStatus("ACTIVE");
         }
-        
         return accountRepository.save(account);
     }
 
-    // Get Transaction History
-    public List<Transaction> getTransactionHistory(Long accountId) {
-        return transactionRepository.findByAccountAccountNumber(accountId);
+    public List<Transaction> getTransactionHistory(String accountNumber) {
+        return transactionRepository.findByAccountAccountNumber(accountNumber);
     }
 }
