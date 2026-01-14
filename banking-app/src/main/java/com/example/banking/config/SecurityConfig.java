@@ -45,11 +45,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow all origins for testing
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000")); 
+        
+        // --- UPDATED HERE: Added your Netlify URL ---
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",          // Local Frontend
+            "http://localhost:3000",          // Alternate Local
+            "https://alphabanking.netlify.app" // YOUR DEPLOYED SITE
+        )); 
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
