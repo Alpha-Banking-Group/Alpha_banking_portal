@@ -10,49 +10,57 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
-
     @Autowired
     private CustomerRepository customerRepository;
-
     @Autowired
     private TransactionRepository transactionRepository;
 
-    // --- Helper Methods ---
-    private void checkKyc(Account account) {
-        if (account.getCustomer() != null && !"VERIFIED".equalsIgnoreCase(account.getCustomer().getKycStatus())) {
-            throw new RuntimeException("Transaction Failed: KYC not verified");
+    private String generateRandomAccountNumber() {
+        Random random = new Random();
+        long number = 1000000000L + (long)(random.nextDouble() * 9000000000L);
+        return String.valueOf(number);
+    }
+
+    // --- DEBUGGING HELPERS ---
+    private void checkKyc(Account account, String userType) {
+        String kycStatus = account.getCustomer().getKycStatus();
+        System.out.println("Checking KYC for " + userType + " (" + account.getCustomer().getFullName() + "): " + kycStatus);
+        
+        if (!"VERIFIED".equalsIgnoreCase(kycStatus)) {
+            System.out.println("❌ FAILURE: " + userType + " is not VERIFIED.");
+            throw new RuntimeException("Transaction Failed: " + userType + " KYC is not verified");
         }
     }
 
-    private void checkAccountStatus(Account account) {
-        if ("FROZEN".equalsIgnoreCase(account.getStatus()) || "INACTIVE".equalsIgnoreCase(account.getStatus())) {
-            throw new RuntimeException("Transaction Failed: Account is FROZEN/INACTIVE");
+    private void checkBalance(Account account, Double amount) {
+        System.out.println("Checking Balance for " + account.getAccountNumber() + ". Has: " + account.getBalance() + ", Needs: " + amount);
+        if (account.getBalance() < amount) {
+            System.out.println("❌ FAILURE: Insufficient Funds.");
+            throw new RuntimeException("Transaction Failed: Insufficient Balance");
         }
     }
 
-    // --- Core Features ---
+    // --- CORE LOGIC ---
 
     public Account createAccount(Long customerId, Account account) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        
-        if(account.getAccountNumber() == null || account.getAccountNumber().isEmpty()){
-             throw new RuntimeException("Account Number is required");
-        }
-
         account.setCustomer(customer);
+        if (account.getAccountNumber() == null || account.getAccountNumber().isEmpty()) {
+             account.setAccountNumber(generateRandomAccountNumber());
+        }
         if (account.getStatus() == null) account.setStatus("ACTIVE");
-        
+        if (account.getOpeningDate() == null) account.setOpeningDate(java.time.LocalDate.now().toString());
         return accountRepository.save(account);
     }
 
-    // FIX: Changed Long id -> String accountNumber
     public Account getAccount(String accountNumber) {
         return accountRepository.findById(accountNumber)
             .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
@@ -60,53 +68,52 @@ public class AccountService {
 
     public Account deposit(String accountNumber, Double amount) {
         Account account = getAccount(accountNumber);
-        checkAccountStatus(account);
-        checkKyc(account);
+        // We only check KYC for deposit, not balance
+        checkKyc(account, "Receiver"); 
         
         account.setBalance(account.getBalance() + amount);
         Account savedAccount = accountRepository.save(account);
-
-        Transaction transaction = new Transaction(amount, "DEPOSIT", savedAccount);
-        transactionRepository.save(transaction);
-
+        transactionRepository.save(new Transaction(amount, "DEPOSIT", savedAccount));
         return savedAccount;
     }
 
     public Account withdraw(String accountNumber, Double amount) {
         Account account = getAccount(accountNumber);
-        checkAccountStatus(account);
-        checkKyc(account);
-
-        if (account.getBalance() < amount) throw new RuntimeException("Insufficient Balance");
+        checkKyc(account, "Sender"); // Check Sender KYC
+        checkBalance(account, amount); // Check Sender Balance
         
         account.setBalance(account.getBalance() - amount);
         Account savedAccount = accountRepository.save(account);
-
-        Transaction transaction = new Transaction(amount, "WITHDRAWAL", savedAccount);
-        transactionRepository.save(transaction);
-
+        transactionRepository.save(new Transaction(amount, "WITHDRAWAL", savedAccount));
         return savedAccount;
     }
 
     @Transactional 
     public void transfer(String fromAccNum, String toAccNum, Double amount) {
+        System.out.println("--- STARTING TRANSFER ---");
+        System.out.println("From: " + fromAccNum + " To: " + toAccNum + " Amount: " + amount);
+        
+        // 1. Withdraw checks Sender KYC and Balance
         withdraw(fromAccNum, amount); 
+        
+        // 2. Deposit checks Receiver KYC
         deposit(toAccNum, amount); 
+        
+        System.out.println("--- TRANSFER SUCCESSFUL ---");
     }
-
-    // --- MISSING METHODS ADDED HERE (Fixed for String ID) ---
-
+    
+    // ... keep your other existing methods (updateAccountStatus, getTransactionHistory, getAccountsByCustomerId) ...
     public Account updateAccountStatus(String accountNumber) {
         Account account = getAccount(accountNumber);
-        if ("ACTIVE".equalsIgnoreCase(account.getStatus())) {
-            account.setStatus("FROZEN");
-        } else {
-            account.setStatus("ACTIVE");
-        }
+        account.setStatus("ACTIVE".equalsIgnoreCase(account.getStatus()) ? "FROZEN" : "ACTIVE");
         return accountRepository.save(account);
     }
 
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactionRepository.findByAccountAccountNumber(accountNumber);
+    }
+
+    public List<Account> getAccountsByCustomerId(Long customerId) {
+        return accountRepository.findByCustomerId(customerId);
     }
 }

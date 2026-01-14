@@ -2,16 +2,9 @@ package com.example.banking.controller;
 
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import com.example.banking.entity.Account;
 import com.example.banking.entity.Transaction;
 import com.example.banking.service.AccountService;
@@ -23,50 +16,64 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
-    // Create Account: Customer ID is still Long, that's fine
     @PostMapping("/{customerId}")
-    public Account createAccount(@PathVariable Long customerId, @RequestBody Account account) {
-        return accountService.createAccount(customerId, account);
+    public ResponseEntity<Account> createAccount(@PathVariable Long customerId, @RequestBody Account account) {
+        return ResponseEntity.ok(accountService.createAccount(customerId, account));
     }
 
-    // FIX: Changed Long -> String
     @GetMapping("/{accountNumber}")
-    public Account getAccount(@PathVariable String accountNumber) {
-        return accountService.getAccount(accountNumber);
+    public ResponseEntity<Account> getAccount(@PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.getAccount(accountNumber));
     }
 
-    // FIX: Changed Long -> String
-    @PostMapping("/{accountNumber}/deposit")
-    public Account deposit(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
-        return accountService.deposit(accountNumber, request.get("amount"));
+    @PutMapping("/{accountNumber}/deposit")
+    public ResponseEntity<Account> deposit(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
+        // Handle both integer and double input
+        Object amountObj = request.get("amount");
+        Double amount = Double.valueOf(amountObj.toString());
+        return ResponseEntity.ok(accountService.deposit(accountNumber, amount));
     }
 
-    // FIX: Changed Long -> String
-    @PostMapping("/{accountNumber}/withdraw")
-    public Account withdraw(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
-        return accountService.withdraw(accountNumber, request.get("amount"));
+    @PutMapping("/{accountNumber}/withdraw")
+    public ResponseEntity<Account> withdraw(@PathVariable String accountNumber, @RequestBody Map<String, Double> request) {
+        Object amountObj = request.get("amount");
+        Double amount = Double.valueOf(amountObj.toString());
+        return ResponseEntity.ok(accountService.withdraw(accountNumber, amount));
     }
 
-    @PostMapping("/transfer")
-    public String transfer(@RequestBody Map<String, Object> request) {
-        // FIX: Casting to String instead of Long
-        String fromAccount = request.get("fromAccount").toString();
-        String toAccount = request.get("toAccount").toString();
+    // FIXED TRANSFER METHOD
+    @PutMapping("/{accountNumber}/transfer")
+    public ResponseEntity<String> transfer(@PathVariable String accountNumber, @RequestBody Map<String, Object> request) {
+        
+        // 1. Try to get destination account using BOTH possible names
+        Object toAccountObj = request.get("toAccountId");
+        if (toAccountObj == null) {
+            toAccountObj = request.get("toAccount");
+        }
+
+        if (toAccountObj == null) {
+            return ResponseEntity.badRequest().body("Error: Missing 'toAccountId' or 'toAccount'");
+        }
+
+        String toAccount = toAccountObj.toString();
         Double amount = Double.valueOf(request.get("amount").toString());
 
-        accountService.transfer(fromAccount, toAccount, amount);
-        return "Transfer Successful";
+        accountService.transfer(accountNumber, toAccount, amount);
+        return ResponseEntity.ok("Transfer Successful");
     }
 
-    // FIX: Changed Long -> String
     @GetMapping("/{accountNumber}/transactions")
-    public List<Transaction> getTransactionHistory(@PathVariable String accountNumber) {
-        return accountService.getTransactionHistory(accountNumber);
+    public ResponseEntity<List<Transaction>> getTransactionHistory(@PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.getTransactionHistory(accountNumber));
     }
     
-    // FIX: Changed Long -> String
     @PutMapping("/{accountNumber}/status")
-    public Account updateAccountStatus(@PathVariable String accountNumber) {
-        return accountService.updateAccountStatus(accountNumber);
+    public ResponseEntity<Account> updateAccountStatus(@PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.updateAccountStatus(accountNumber));
+    }
+    
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Account>> getAccountsByCustomerId(@PathVariable Long customerId) {
+        return ResponseEntity.ok(accountService.getAccountsByCustomerId(customerId));
     }
 }

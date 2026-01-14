@@ -1,7 +1,6 @@
 package com.example.banking.entity;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.List;
 
@@ -11,22 +10,30 @@ public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "custid")
+    @Column(name = "custid") // <--- THIS FIXES THE ERROR (Maps 'id' to 'custid')
     private Long id;
 
+    @Column(name = "full_name") // Ensure this matches DB
     private String fullName;
+    
     private String email;
+    
+    @Column(name = "mobile_number") // Ensure this matches DB
     private String mobileNumber;
+    
     private String address;
+    
+    @Column(name = "date_of_birth") // Ensure this matches DB
     private String dateOfBirth;
+    
+    @Column(name = "kyc_status") // Ensure this matches DB
     private String kycStatus;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Account> accounts;
 
-    // --- MANUAL GETTERS AND SETTERS ---
-
+    // --- GETTERS AND SETTERS ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
