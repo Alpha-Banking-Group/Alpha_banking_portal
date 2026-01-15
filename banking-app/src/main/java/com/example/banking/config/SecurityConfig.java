@@ -9,6 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -18,20 +19,30 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Allow EVERYTHING for now to stop the 403 errors blocking you
-                .requestMatchers("/**").permitAll()
-            );
+                // 1. ALLOW PUBLIC ACCESS TO AUTH (Login/Register)
+                .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
+                
+                // 2. REQUIRE LOGIN FOR EVERYTHING ELSE (Accounts, Transactions)
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
-    // THIS WAS MISSING - CAUSING THE CRASH
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -46,11 +57,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // --- UPDATED HERE: Added your Netlify URL ---
+        // Keep your Netlify URL here
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",          // Local Frontend
-            "http://localhost:3000",          // Alternate Local
-            "https://alphabanking.netlify.app" // YOUR DEPLOYED SITE
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://alphabanking.netlify.app"
         )); 
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
